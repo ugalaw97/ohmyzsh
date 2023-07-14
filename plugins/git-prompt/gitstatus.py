@@ -15,9 +15,7 @@ def get_tagname_or_hash():
 
     # get tagname
     tags_cmd = ['git', 'for-each-ref', '--points-at=HEAD', '--count=2', '--sort=-version:refname', '--format=%(refname:short)', 'refs/tags']
-    tags = check_output(tags_cmd).decode('utf-8').split()
-
-    if tags:
+    if tags := check_output(tags_cmd).decode('utf-8').split():
         return tags[0] + ('+' if len(tags) > 1 else '')
     elif hash_:
         return hash_
@@ -27,7 +25,7 @@ def get_tagname_or_hash():
 def get_stash():
     cmd = Popen(['git', 'rev-parse', '--git-dir'], stdout=PIPE, stderr=PIPE)
     so, se = cmd.communicate()
-    stash_file = '%s%s' % (so.decode('utf-8').rstrip(), '/logs/refs/stash')
+    stash_file = f"{so.decode('utf-8').rstrip()}/logs/refs/stash"
 
     try:
         with open(stash_file) as f:
@@ -58,10 +56,7 @@ for st in status:
         else:
             # current and remote branch info
             branch, rest = st[2].strip().split('...')
-            if len(rest.split(' ')) == 1:
-                # remote_branch = rest.split(' ')[0]
-                pass
-            else:
+            if len(rest.split(' ')) != 1:
                 # ahead or behind
                 divergence = ' '.join(rest.split(' ')[1:])
                 divergence = divergence.lstrip('[').rstrip(']')
@@ -83,11 +78,7 @@ for st in status:
             staged.append(st)
 
 stashed = get_stash()
-if not changed and not deleted and not staged and not conflicts and not untracked:
-    clean = 1
-else:
-    clean = 0
-
+clean = 0 if changed or deleted or staged or conflicts or untracked else 1
 out = ' '.join([
     branch,
     str(ahead),
